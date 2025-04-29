@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic GoPro QR Code Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 600px;
+            margin: auto;
+        }
+        .control-panel {
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        label, select, input[type="text"], button {
+            padding: 8px;
+            font-size: 1em;
+        }
+        #qrcode {
+            margin-top: 20px;
+            text-align: center;
+        }
+        canvas, img {
+            max-width: 100%;
+            height: auto;
+        }
+        #suggestionBox {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            padding: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h2>Dynamic GoPro QR Code Generator</h2>
+
+    <div id="suggestionBox"></div>
+
+    <div class="control-panel">
+        <label for="labelSelect">Label:</label>
+        <select id="labelSelect">
+            <option value="" disabled selected>Select a label</option>
+            <option value="Day TEST">Day TEST</option>
+            <option value="Day START">Day START</option>
+            <option value="camera change STOP">camera change STOP</option>
+            <option value="camera change START">camera change START</option>
+            <option value="Day END">Day END</option>
+            <option value="overheat CHANGE">overheat CHANGE</option>
+            <option value="Other">Other</option>
+        </select>
+        <input type="text" id="otherLabel" placeholder="Enter custom label" disabled>
+        <button id="generateBtn">Generate</button>
+    </div>
+
+    <div id="qrcode"></div>
+
+    <script>
+        let qr;
+        let noteText = "";
+        let lastAssigned = "";
+
+        function getSuggestedLabel() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const totalMinutes = hours * 60 + minutes;
+
+            const isAround = (target, delta) => Math.abs(totalMinutes - target) <= delta;
+
+            if (totalMinutes >= 420 && totalMinutes <= 465) return "Day TEST"; // 7:00–7:45
+            if (isAround(480, 10)) return "Day START"; // 8:00 ±10min
+            if ([660, 840, 1020].some(t => isAround(t, 15))) {
+                if (lastAssigned === "camera change STOP") return "camera change START";
+                else return "camera change STOP";
+            }
+            if (isAround(1200, 30)) return "Day END"; // 8:00PM ±30min
+            return "overheat CHANGE";
+        }
+
+        function suggestLabelIfApplicable() {
+            const label = getSuggestedLabel();
+            const suggestionBox = document.getElementById("suggestionBox");
+            suggestionBox.innerHTML = `Change to <strong>${label}</strong>? <button onclick=\"applySuggestedLabel('${label}')\">OK</button>`;
+            suggestionBox.style.display = "block";
+        }
+
+        function applySuggestedLabel(label) {
+            const labelSelect = document.getElementById("labelSelect");
+            labelSelect.value = label;
+            lastAssigned = label;
+            document.getElementById("otherLabel").disabled = true;
+            noteText = label;
+            generateQRCode();
+            document.getElementById("suggestionBox").style.display = "none";
+        }
+
+        function generateQRCode() {
+            if (qr) {
+                document.getElementById("qrcode").innerHTML = "";
+            }
+
+            const now = new Date();
+            const hh = String(now.getHours()).padStart(2, '0');
+            const mm = String(now.getMinutes()).padStart(2, '0');
+            const ss = String(now.getSeconds()).padStart(2, '0');
+            const timestamp = `[${hh}:${mm}:${ss}]`;
+
+            const finalText = `${noteText}\n${timestamp}`;
+
+            const burnCommand = `*BURN=\"(0,60)${finalText}\"*BRNP=TL*BRNT=0mV!S`;
+
+            qr = new QRCode(document.getElementById("qrcode"), {
+                text: burnCommand,
+                width: 256,
+                height: 256
+            });
+        }
+
+        document.getElementById("labelSelect").addEventListener("change", function() {
+            if (this.value === "Other") {
+                document.getElementById("otherLabel").disabled = false;
+            } else {
+                document.getElementById("otherLabel").disabled = true;
+            }
+        });
+
+        document.getElementById("generateBtn").addEventListener("click", function() {
+            const selectedValue = document.getElementById("labelSelect").value;
+            if (selectedValue === "Other") {
+                noteText = document.getElementById("otherLabel").value.trim() || "Custom Note";
+            } else {
+                noteText = selectedValue;
+            }
+            lastAssigned = noteText;
+            generateQRCode();
+        });
+
+        setInterval(function() {
+            if (noteText !== "") {
+                generateQRCode();
+            }
+        }, 250);
+
+        window.onload = suggestLabelIfApplicable;
+    </script>
+</body>
+</html>
