@@ -59,177 +59,400 @@
 </head>
 <body>
   <h2>GoPro QR Generator</h2>
-
-  <div id="suggestionBox" style="background-color:#fff3cd;border:1px solid #ffeeba;padding:10px;margin-bottom:20px;display:none;"></div>
+  <div id="suggestionBox" style="background-color:#fff3cd;border:1px solid #ffeeba;padding:10px;margin-bottom:20px;"></div>
 
   <div class="control-panel">
-    <div style="width: 25%; color: black; font-weight: bold; text-align: left;"> Patient ID <input type="text" id="patientId" placeholder="Patient ID" style="flex: 1"></div>
-    <div style="width: 25%; color: black; font-weight: bold; text-align: left;"> Stage <input type="number" id="stageId" value="0" min="0" style="flex: 0.5"></div>
-    <div style="width: 100%; color: darkred; font-weight: bold;">Do not forget to click 'Generate' to make a change.</div>
-    <label for="labelSelect">Label:</label>
-    <select id="labelSelect">
-      <option value="" disabled selected>Select a label</option>
-      <option value="Day TEST">Day TEST</option>
-      <option value="Day START">Day START</option>
-      <option value="camera change STOP">camera change STOP</option>
-      <option value="camera change START">camera change START</option>
-      <option value="Day END">Day END</option>
-      <option value="overheat CHANGE">overheat CHANGE</option>
-      <option value="Task">Task</option>
-      <option value="Stim">Stim</option>
-      <option value="Other">Other</option>
-    </select>
+    <label>Patient ID: <input type="text" id="patientId" placeholder="Patient ID"></label>
+    <label>Stage: <input type="number" id="stageId" value="0"></label>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 10px;">
+      <label for="labelSelect">Label:</label>
+      <select id="labelSelect">
+        <option value="" disabled selected>Select a label</option>
+        <option value="Day TEST">Day TEST</option>
+        <option value="Day START">Day START</option>
+        <option value="camera change STOP">camera change STOP</option>
+        <option value="camera change START">camera change START</option>
+        <option value="Day END">Day END</option>
+        <option value="overheat CHANGE">overheat CHANGE</option>
+        <option value="Task">Task</option>
+        <option value="Stim">Stim</option>
+        <option value="Other">Other</option>
+      </select>
     <input type="text" id="otherLabel" placeholder="Enter custom label" disabled>
     <button id="generateBtn">Generate</button>
+    
   </div>
 
-  <div id="stimTab" style="display:none; margin-top: 20px; padding: 10px; border: 1px solid #ccc;">
-    <h3>Stimulation Settings</h3>
-    <div style="display: flex; gap: 20px;">
-      <div>
-        <h4>L</h4>
-        Frequency: <input type="number" id="lFreq" placeholder="Hz"><br>
-        Site: <input type="text" id="lSite"><br>
-        Polarity:
-        <label><input type="radio" name="lPol" value="+"> +</label>
-        <label><input type="radio" name="lPol" value="-"> -</label>
-      </div>
-      <div>
-        <h4>R</h4>
-        Frequency: <input type="number" id="rFreq" placeholder="Hz"><br>
-        Site: <input type="text" id="rSite"><br>
-        Polarity:
-        <label><input type="radio" name="rPol" value="+"> +</label>
-        <label><input type="radio" name="rPol" value="-"> -</label>
-      </div>
-    </div>
+  <div style="display: inline-block; align-items: center; gap: 10px;">
+    <label for="stimUpload">Stim List:</label>
+    <input type="file" id="stimUpload" accept=".csv">
   </div>
+
 
   <div class="tabs">
-    <div class="tab active" onclick="showTab('time')">Time</div>
-    <div class="tab" onclick="showTab('note')">Note</div>
+    <div class="tab" onclick="showTab('time')">Time</div>
+    <div class="tab active" id="noteTab" onclick="showTab('note')">Note</div>
   </div>
 
-  <div id="time" class="tab-content active">
+  <div id="time" class="tab-content">
     <iframe src="https://gopro.github.io/labs/control/precisiontime/" width="270" height="270" frameborder="0"></iframe>
   </div>
-  <div id="note" class="tab-content">
+  <div id="note" class="tab-content active">
     <div id="qrcodeNote"></div>
   </div>
 
-  <div id="debugInfo"></div>
+  <div id="stimListSection" style="margin-top: 30px;">
+    <h3>Stim List</h3>
+    <table id="stimTable" border="1" style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr>
+          <th>#</th><th>LSite</th><th>LFreq</th><th>LPol</th>
+          <th>RSite</th><th>RFreq</th><th>RPol</th><th>Use</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <button onclick="addStimRow()">➕</button>
+    <button id="nextStimBtn" style="display:none;">↓</button>
+  </div>
 
-  <script>
-    let qrNote;
-    let noteText = "No label";
-    let lastAssigned = "";
+  <div id="debugInfo" style="white-space: pre-wrap;"></div>
 
-    function generateNoteQRCode() {
-      const now = new Date();
-      const hh = String(now.getHours()).padStart(2, '0');
-      const mm = String(now.getMinutes()).padStart(2, '0');
-      const ss = String(now.getSeconds()).padStart(2, '0');
-      const timestamp = `[${hh}:${mm}:${ss}]`;
-      const patient = document.getElementById("patientId").value || "[ID]";
-      const stage = document.getElementById("stageId").value || "0";
-      const header = `${patient} ${stage}`;
-      const finalText = `${header}
-${noteText}
-${timestamp}`;
-      const burnCommand = `*BURN=\"(0,200)${finalText}\"*BRNP=TL*BRNT=0mV!S`;
+  <div id="stimLogContainer" style="margin-top: 30px;">
+    <h3>Session Log Table</h3>
+    <table id="stimLogTable" border="1" style="width:100%; text-align:left; border-collapse: collapse;">
+      <thead>
+        <tr><th>Timestamp</th><th>Label</th><th>Patient ID</th><th>Stage</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div style="margin-top:10px;">
+      <button onclick="editStimLog()">✏️</button>
+      <button onclick="deleteStimLog()">🗑️</button>
+      <button onclick="downloadStimLog()">💾</button>
+    </div>
+  </div>
 
-      document.getElementById("qrcodeNote").innerHTML = "";
-      qrNote = new QRCode(document.getElementById("qrcodeNote"), {
-        text: burnCommand,
-        width: 256,
-        height: 256
-      });
 
-      document.getElementById("debugInfo").innerText = `Label: ${noteText}\nTimestamp: ${timestamp}\nCommand: ${burnCommand}`;
-    }
+<script>
+let qrNote;
+let noteText = "No label";
+let lastAssigned = "";
+let stimList = [], stimIndex = 0;
 
-    function getSuggestedLabel() {
-      const now = new Date();
-      const hours = now.getHours();
-      const minutes = now.getMinutes();
-      const totalMinutes = hours * 60 + minutes;
-      const isAround = (target, delta) => Math.abs(totalMinutes - target) <= delta;
-      if (totalMinutes >= 420 && totalMinutes <= 465) return "Day TEST";
-      if (isAround(480, 10)) return "Day START";
-      if ([660, 840, 1020].some(t => isAround(t, 15))) {
-        return lastAssigned === "camera change STOP" ? "camera change START" : "camera change STOP";
-      }
-      if (isAround(1200, 30)) return "Day END";
-      return "overheat CHANGE";
-    }
+function generateNoteQRCode() {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, '0');
+  const mm = String(now.getMinutes()).padStart(2, '0');
+  const ss = String(now.getSeconds()).padStart(2, '0');
+  const timestamp = `[${hh}:${mm}:${ss}]`;
+  const patient = document.getElementById("patientId").value || "[ID]";
+  const stage = document.getElementById("stageId").value || "0";
+  const header = `${patient} ${stage}`;
+  const finalText = `${header}\n${noteText}\n${timestamp}`;
+  const burnCommand = `*BURN="(0,200)${finalText}"*BRNP=TL*BRNT=0mV!S`;
 
-    function suggestLabelIfApplicable() {
-      const label = getSuggestedLabel();
-      const suggestionBox = document.getElementById("suggestionBox");
-      suggestionBox.innerHTML = `Change to <strong>${label}</strong>? <button onclick=\"applySuggestedLabel('${label}')\">OK</button> <button onclick=\"dismissSuggestion()\">No</button>`;
-      suggestionBox.style.display = "block";
-    }
+  document.getElementById("qrcodeNote").innerHTML = "";
+  qrNote = new QRCode(document.getElementById("qrcodeNote"), {
+    text: burnCommand,
+    width: 256,
+    height: 256
+  });
 
-    function applySuggestedLabel(label) {
-      document.getElementById("labelSelect").value = label;
-      document.getElementById("otherLabel").disabled = true;
-      noteText = label;
-      lastAssigned = label;
-      generateNoteQRCode();
-      document.getElementById("suggestionBox").style.display = "none";
-    }
-
-    function dismissSuggestion() {
-  const suggestionBox = document.getElementById("suggestionBox");
-  const label = getSuggestedLabel();
-  suggestionBox.innerHTML = `Change to <strong>${label}</strong>? <button onclick=\"applySuggestedLabel('${label}')\">OK</button> <button onclick=\"dismissSuggestion()\">No</button>`;
-  suggestionBox.style.display = "block";
+  document.getElementById("debugInfo").innerText = `Label: ${noteText}\nTimestamp: ${timestamp}\nCommand: ${burnCommand}`;
+  logStimRow(); 
 }
 
-    function showTab(tabId) {
-      document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-      document.querySelector(`.tab[onclick*='${tabId}']`).classList.add('active');
-      document.getElementById(tabId).classList.add('active');
+let selectedStimRow = null;
+
+function addStimLogRow(ts, label, pid, stage) {
+  const table = document.getElementById("stimLogTable").querySelector("tbody");
+  const row = table.insertRow();
+  row.insertCell(0).innerText = ts;
+  row.insertCell(1).innerText = label;
+  row.insertCell(2).innerText = pid;
+  row.insertCell(3).innerText = stage;
+  row.onclick = () => {
+    document.querySelectorAll("#stimLogTable tbody tr").forEach(r => r.style.background = "");
+    row.style.background = "#cceeff";
+    selectedStimRow = row;
+  };
+}
+
+function logStimRow() {
+  const ts = Date.now();
+  const label = noteText;
+  const pid = document.getElementById("patientId").value || "[ID]";
+  const stage = document.getElementById("stageId").value || "0";
+  addStimLogRow(ts, label, pid, stage);
+}
+
+function editStimLog() {
+  if (!selectedStimRow) return alert("Please select a row to edit.");
+  for (let i = 1; i <= 3; i++) {
+    selectedStimRow.cells[i].contentEditable = true;
+    selectedStimRow.cells[i].style.background = "#fff8dc";
+  }
+}
+
+function deleteStimLog() {
+  if (!selectedStimRow) return alert("Please select a row to delete.");
+  selectedStimRow.remove();
+  selectedStimRow = null;
+}
+
+function downloadStimLog() {
+  const rows = document.querySelectorAll("#stimLogTable tbody tr");
+  let csv = "Timestamp,Label,Patient ID,Stage\n";
+  rows.forEach(row => {
+    const data = Array.from(row.cells).map(cell => '"' + cell.innerText.replace(/"/g, '""') + '"').join(",");
+    csv += data + "\n";
+  });
+  const blob = new Blob([csv], { type: "text/csv" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  // Set the filename to include the current date and time
+  const now = new Date();
+  const dateStr = now.toISOString().replace(/:/g, "-").split(".")[0];
+  link.download = `session_log_${dateStr}.csv`;
+  link.click();
+}
+
+function getSuggestedLabel() {
+  const now = new Date();
+  const minutes = now.getHours() * 60 + now.getMinutes();
+  const isAround = (target, range) => Math.abs(minutes - target) <= range;
+  if (minutes >= 420 && minutes <= 465) return "Day TEST";
+  if (isAround(480, 10)) return "Day START";
+  if ([660, 840, 1020].some(t => isAround(t, 15))) {
+    return lastAssigned.includes("STOP") ? "camera change START" : "camera change STOP";
+  }
+  if (isAround(1200, 30)) return "Day END";
+  return "overheat CHANGE";
+}
+
+function suggestLabelIfApplicable() {
+  const label = getSuggestedLabel();
+  const box = document.getElementById("suggestionBox");
+  box.innerHTML = `Change to <strong>${label}</strong>? <button onclick="applySuggestedLabel('${label}')">OK</button> <button onclick="dismissSuggestion()">No</button>`;
+  box.style.display = "block";
+}
+
+function applySuggestedLabel(label) {
+  document.getElementById("labelSelect").value = label;
+  document.getElementById("otherLabel").disabled = true;
+  noteText = label;
+  lastAssigned = label;
+  generateNoteQRCode();
+}
+
+function dismissSuggestion() {
+  suggestLabelIfApplicable();
+}
+
+function showTab(tabId) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.tab[onclick*='${tabId}']`).classList.add('active');
+  document.getElementById(tabId).classList.add('active');
+}
+
+document.getElementById("labelSelect").addEventListener("change", function () {
+  const val = this.value;
+  document.getElementById("otherLabel").disabled = !(val === "Other" || val === "Task");
+  document.getElementById("nextStimBtn").style.display = val === "Stim" ? "inline-block" : "none";
+  document.getElementById("stimTabBtn").style.display = val === "Stim" ? "inline-block" : "none";
+});
+
+document.getElementById("generateBtn").addEventListener("click", () => {
+  const label = document.getElementById("labelSelect").value;
+  const custom = document.getElementById("otherLabel").value.trim();
+  if (label === "Stim") {
+    useStim(stimIndex);
+  } else if (label === "Task") {
+    noteText = `Task ${custom}`;
+  } else if (label === "Other") {
+    noteText = custom;
+  } else {
+    noteText = label;
+  }
+  lastAssigned = noteText;
+  generateNoteQRCode();
+});
+
+function useStim(index) {
+  const s = stimList[index];
+  noteText = `L[${s.LSite}][${s.LPol}] [${s.LFreq}] & R[${s.RSite}][${s.RPol}] [${s.RFreq}]`;
+  highlightStimRow(index);
+}
+
+function highlightStimRow(index) {
+  const rows = document.querySelectorAll("#stimTable tbody tr");
+  rows.forEach((row, i) => {
+    row.style.background = i === index ? "#d0f0ff" : "";
+  });
+}
+
+document.getElementById("stimUpload").addEventListener("change", function () {
+  const file = this.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    const lines = e.target.result.split(/[\r\n]+/).filter(line => line.trim() !== "");
+    const headers = lines[0].trim().replace(/\uFEFF/, '').split(",");  // remove BOM
+
+    if (headers.length !== 6 || headers.join(',') !== "LSite,LFreq,LPol,RSite,RFreq,RPol") {
+      alert("Invalid header. Make sure the CSV header is: LSite,LFreq,LPol,RSite,RFreq,RPol");
+      return;
     }
 
-    document.getElementById("labelSelect").addEventListener("change", function () {
-      const value = this.value;
-      document.getElementById("otherLabel").disabled = !(value === "Other" || value === "Task");
-      document.getElementById("stimTab").style.display = value === "Stim" ? "block" : "none";
-      document.getElementById("otherLabel").disabled = this.value !== "Other" && this.value !== "Task";
+    stimList = lines.slice(1).map(line => {
+      const [LSite, LFreq, LPol, RSite, RFreq, RPol] = line.split(",").map(s => s.trim());
+      return { LSite, LFreq, LPol, RSite, RFreq, RPol };
     });
 
-    document.getElementById("generateBtn").addEventListener("click", function () {
-      const otherField = document.getElementById("otherLabel").value.trim();
-      const selected = document.getElementById("labelSelect").value;
-      if (selected === "Task") {
-        noteText = `Task ${otherField || ""}`;
-      } else if (selected === "Stim") {
-        const lFreq = document.getElementById("lFreq").value;
-        const lSite = document.getElementById("lSite").value;
-        const lPol = document.querySelector("input[name='lPol']:checked")?.value || "";
-        const rFreq = document.getElementById("rFreq").value;
-        const rSite = document.getElementById("rSite").value;
-        const rPol = document.querySelector("input[name='rPol']:checked")?.value || "";
-        noteText = `L[${lSite}][${lFreq}][${lPol}] & R[${rSite}][${rFreq}][${rPol}]`;
-      }
-       else if (selected === "Other") {
-        noteText = otherField || "Custom Note";
-      } else if (selected === "Task"){
-        noteText = `Task ${otherField || ""}`;
-      } 
-      else {
-        noteText = selected;
-      }
-      lastAssigned = noteText;
-      generateNoteQRCode();
-    });
+    stimIndex = 0;
+    renderStimTable();
+    alert("Stim list loaded!");
+  };
+  reader.readAsText(file);
+});
 
-    window.onload = function () {
-      generateNoteQRCode();
-      suggestLabelIfApplicable();
-    }
-  </script>
+function renderStimTable() {
+  const tbody = document.querySelector("#stimTable tbody");
+  tbody.innerHTML = "";
+  stimList.forEach((stim, i) => {
+    const row = tbody.insertRow();
+    row.insertCell(0).innerText = i;
+    row.insertCell(1).innerText = stim.LSite;
+    row.insertCell(2).innerText = stim.LFreq;
+    row.insertCell(3).innerText = stim.LPol;
+    row.insertCell(4).innerText = stim.RSite;
+    row.insertCell(5).innerText = stim.RFreq;
+    row.insertCell(6).innerText = stim.RPol;
+
+    // Highlight selection and apply stim
+    row.onclick = () => {
+      stimIndex = i;
+
+      const label = document.getElementById("labelSelect").value;
+      if (label === "Stim") {
+        useStim(i);
+        generateNoteQRCode();
+        highlightStimRow(i);
+      } else {
+        highlightStimRow(i);  // still show the row is selected, but don’t update the QR
+      }
+    };
+
+    const btnEdit = document.createElement("button");
+    btnEdit.innerText = "✏️";
+    btnEdit.onclick = (e) => {
+      e.stopPropagation();
+      for (let j = 1; j <= 6; j++) {
+        row.cells[j].contentEditable = true;
+        row.cells[j].style.background = "#fff8dc";
+      }
+    };
+
+    const btnDelete = document.createElement("button");
+    btnDelete.innerText = "🗑️";
+    btnDelete.onclick = (e) => {
+      e.stopPropagation();
+      row.remove();
+    };
+
+    const btnCell = row.insertCell(7);
+    btnCell.appendChild(btnEdit);
+    btnCell.appendChild(document.createTextNode(" "));
+    btnCell.appendChild(btnDelete);
+  });
+}
+
+function addStimRow() {
+  const tbody = document.querySelector("#stimTable tbody");
+  const index = tbody.rows.length;
+  const row = tbody.insertRow();
+
+  row.insertCell(0).innerText = index;
+
+  for (let i = 1; i <= 6; i++) {
+    const cell = row.insertCell(i);
+    cell.contentEditable = true;
+    cell.innerText = "";
+    cell.style.background = "#fff8dc";
+  }
+
+  const btnCell = row.insertCell(7);
+  const btnAdd = document.createElement("button");
+  btnAdd.innerText = "➕ Add";
+  btnAdd.onclick = () => {
+    const newStim = {
+      LSite: row.cells[1].innerText.trim(),
+      LFreq: row.cells[2].innerText.trim(),
+      LPol: row.cells[3].innerText.trim(),
+      RSite: row.cells[4].innerText.trim(),
+      RFreq: row.cells[5].innerText.trim(),
+      RPol: row.cells[6].innerText.trim(),
+    };
+
+    stimList.push(newStim); // officially joins the stimList
+
+    // Make row behave like a selectable stim
+    row.onclick = () => {
+      stimIndex = stimList.length - 1;
+
+      const label = document.getElementById("labelSelect").value;
+      if (label === "Stim") {
+        useStim(stimIndex);
+        generateNoteQRCode();
+        highlightStimRow(stimIndex);
+      } else {
+        highlightStimRow(stimIndex);
+      }
+    };
+
+    // Replace "Add" button with Edit/Delete buttons
+    btnCell.innerHTML = "";
+
+    const btnEdit = document.createElement("button");
+    btnEdit.innerText = "✏️";
+    btnEdit.onclick = (e) => {
+      e.stopPropagation();
+      for (let j = 1; j <= 6; j++) {
+        row.cells[j].contentEditable = true;
+        row.cells[j].style.background = "#fff8dc";
+      }
+    };
+
+    const btnDelete = document.createElement("button");
+    btnDelete.innerText = "🗑️";
+    btnDelete.onclick = (e) => {
+      e.stopPropagation();
+      row.remove();
+      stimList.splice(stimIndex, 1);
+    };
+
+    btnCell.appendChild(btnEdit);
+    btnCell.appendChild(document.createTextNode(" "));
+    btnCell.appendChild(btnDelete);
+  };
+
+  btnCell.appendChild(btnAdd);
+}
+
+document.getElementById("nextStimBtn").addEventListener("click", function () {
+  stimIndex = (stimIndex + 1) % stimList.length;
+  useStim(stimIndex);
+  generateNoteQRCode();
+});
+
+window.onload = function () {
+  suggestLabelIfApplicable();
+  generateNoteQRCode();
+};
+</script>
 </body>
 </html>
