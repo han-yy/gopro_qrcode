@@ -197,7 +197,7 @@ ${timestamp}`;
       const value = this.value;
       document.getElementById("otherLabel").disabled = !(value === "Other" || value === "Task");
       document.getElementById("stimTab").style.display = value === "Stim" ? "block" : "none";
-      document.getElementById("otherLabel").disabled = this.value !== "Other";
+      document.getElementById("otherLabel").disabled = this.value !== "Other" && this.value !== "Task";
     });
 
     document.getElementById("generateBtn").addEventListener("click", function () {
@@ -216,7 +216,10 @@ ${timestamp}`;
       }
        else if (selected === "Other") {
         noteText = otherField || "Custom Note";
-      } else {
+      } else if (selected === "Task"){
+        noteText = `Task ${otherField || ""}`;
+      } 
+      else {
         noteText = selected;
       }
       lastAssigned = noteText;
