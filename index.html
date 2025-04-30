@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic GoPro QR Code Generator</title>
+    <title>Dual GoPro QR Code Generator</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
             padding: 20px;
-            max-width: 600px;
+            max-width: 700px;
             margin: auto;
         }
         .control-panel {
@@ -23,28 +23,33 @@
             padding: 8px;
             font-size: 1em;
         }
-        #qrcode {
-            margin-top: 20px;
+        .qrcode-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .qrcode-box {
             text-align: center;
         }
         canvas, img {
             max-width: 100%;
             height: auto;
         }
-        #suggestionBox {
-            background-color: #fff3cd;
-            border: 1px solid #ffeeba;
+        #debugInfo {
+            font-family: monospace;
+            background-color: #f4f4f4;
             padding: 10px;
-            margin-bottom: 20px;
-            display: none;
+            border: 1px solid #ccc;
+            margin-top: 20px;
+            white-space: pre-wrap;
         }
     </style>
 </head>
 <body>
-    <h2>Dynamic GoPro QR Code Generator</h2>
+    <h2>Dual GoPro QR Code Generator</h2>
 
-    <div id="suggestionBox"></div>
-
+    <div id="suggestionBox" style="background-color:#fff3cd;border:1px solid #ffeeba;padding:10px;margin-bottom:20px;display:none;"></div>
     <div class="control-panel">
         <label for="labelSelect">Label:</label>
         <select id="labelSelect">
@@ -61,104 +66,92 @@
         <button id="generateBtn">Generate</button>
     </div>
 
-    <div id="qrcode"></div>
+    <div class="qrcode-container">
+        <div class="qrcode-box">
+            <h4>Precision Time QR</h4>
+            <iframe src="https://gopro.github.io/labs/control/precisiontime/" width="270" height="270" frameborder="0"></iframe>
+        </div>
+        <div class="qrcode-box">
+            <h4>Note + Camera Time</h4>
+            <div id="qrcodeNote"></div>
+        </div>
+    </div>
+
+    <div id="debugInfo"></div>
 
     <script>
-        let qr;
+        let qrNote;
         let noteText = "No label";
         let lastAssigned = "";
 
-        function getSuggestedLabel() {
-            const now = new Date();
-            const hours = now.getHours();
-            const minutes = now.getMinutes();
-            const totalMinutes = hours * 60 + minutes;
-
-            const isAround = (target, delta) => Math.abs(totalMinutes - target) <= delta;
-
-            if (totalMinutes >= 420 && totalMinutes <= 465) return "Day TEST";
-            if (isAround(480, 10)) return "Day START";
-            if ([660, 840, 1020].some(t => isAround(t, 15))) {
-                if (lastAssigned === "camera change STOP") return "camera change START";
-                else return "camera change STOP";
-            }
-            if (isAround(1200, 30)) return "Day END";
-            return "overheat CHANGE";
-        }
-
-        function suggestLabelIfApplicable() {
-            const label = getSuggestedLabel();
-            const suggestionBox = document.getElementById("suggestionBox");
-            suggestionBox.innerHTML = `Change to <strong>${label}</strong>? <button onclick=\"applySuggestedLabel('${label}')\">OK</button> <button onclick=\"dismissSuggestion()\">No</button>`;
-            suggestionBox.style.display = "block";
-        }
-
-        function applySuggestedLabel(label) {
-            const labelSelect = document.getElementById("labelSelect");
-            labelSelect.value = label;
-            lastAssigned = label;
-            document.getElementById("otherLabel").disabled = true;
-            noteText = label;
-            generateQRCode();
-            document.getElementById("suggestionBox").style.display = "none";
-        }
-
-        function dismissSuggestion() {
-            document.getElementById("suggestionBox").style.display = "none";
-        }
-
-        function generateQRCode() {
-            if (qr) {
-                document.getElementById("qrcode").innerHTML = "";
-            }
-
+        function generateNoteQRCode() {
             const now = new Date();
             const hh = String(now.getHours()).padStart(2, '0');
             const mm = String(now.getMinutes()).padStart(2, '0');
             const ss = String(now.getSeconds()).padStart(2, '0');
             const timestamp = `[${hh}:${mm}:${ss}]`;
-
             const finalText = `${noteText}\n${timestamp}`;
-
             const burnCommand = `*BURN=\"(0,60)${finalText}\"*BRNP=TL*BRNT=0mV!S`;
 
-            qr = new QRCode(document.getElementById("qrcode"), {
+            document.getElementById("qrcodeNote").innerHTML = "";
+            qrNote = new QRCode(document.getElementById("qrcodeNote"), {
                 text: burnCommand,
                 width: 256,
                 height: 256
             });
+
+            document.getElementById("debugInfo").innerText = `Label: ${noteText}\nTimestamp: ${timestamp}\nCommand: ${burnCommand}`;
         }
 
         document.getElementById("labelSelect").addEventListener("change", function() {
-            if (this.value === "Other") {
-                document.getElementById("otherLabel").disabled = false;
-            } else {
-                document.getElementById("otherLabel").disabled = true;
-            }
+            document.getElementById("otherLabel").disabled = this.value !== "Other" ? true : false;
         });
 
         document.getElementById("generateBtn").addEventListener("click", function() {
-            const selectedValue = document.getElementById("labelSelect").value;
-            if (selectedValue === "Other") {
-                noteText = document.getElementById("otherLabel").value.trim() || "Custom Note";
-            } else {
-                noteText = selectedValue;
-            }
+            const selected = document.getElementById("labelSelect").value;
+            noteText = selected === "Other" ? (document.getElementById("otherLabel").value.trim() || "Custom Note") : selected;
             lastAssigned = noteText;
-            generateQRCode();
+            generateNoteQRCode();
+    suggestLabelIfApplicable();
         });
 
-        // Change refresh frequency here (default is 250ms)
-        const refreshIntervalMs = 10;
+        function getSuggestedLabel() {
+    const now = new Date();
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+    const totalMinutes = hours * 60 + minutes;
+    const isAround = (target, delta) => Math.abs(totalMinutes - target) <= delta;
+    if (totalMinutes >= 420 && totalMinutes <= 465) return "Day TEST";
+    if (isAround(480, 10)) return "Day START";
+    if ([660, 840, 1020].some(t => isAround(t, 15))) {
+        return lastAssigned === "camera change STOP" ? "camera change START" : "camera change STOP";
+    }
+    if (isAround(1200, 30)) return "Day END";
+    return "overheat CHANGE";
+}
 
-        setInterval(function() {
-            if (noteText !== "") {
-                generateQRCode();
-            }
-        }, refreshIntervalMs);
+function suggestLabelIfApplicable() {
+            const label = getSuggestedLabel();
+            const suggestionBox = document.getElementById("suggestionBox");
+            suggestionBox.innerHTML = `Change to <strong>${label}</strong>? <button onclick=\"applySuggestedLabel('${label}')\">OK</button> <button onclick=\"dismissSuggestion()\">No</button>`;
+            suggestionBox.style.display = "block";
+}
 
-        window.onload = function () {
-            generateQRCode();
+function applySuggestedLabel(label) {
+    document.getElementById("labelSelect").value = label;
+    document.getElementById("otherLabel").disabled = true;
+    noteText = label;
+    lastAssigned = label;
+    generateNoteQRCode();
+    document.getElementById("suggestionBox").style.display = "none";
+}
+
+function dismissSuggestion() {
+    document.getElementById("suggestionBox").style.display = "none";
+}
+
+window.onload = function () {
+            generateNoteQRCode();
             suggestLabelIfApplicable();
         };
     </script>
