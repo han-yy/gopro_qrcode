@@ -136,7 +136,7 @@
       const finalText = `${header}
 ${noteText}
 ${timestamp}`;
-      const burnCommand = `*BURN=\"(0,60)${finalText}\"*BRNP=TL*BRNT=0mV!S`;
+      const burnCommand = `*BURN=\"(0,200)${finalText}\"*BRNP=TL*BRNT=0mV!S`;
 
       document.getElementById("qrcodeNote").innerHTML = "";
       qrNote = new QRCode(document.getElementById("qrcodeNote"), {
