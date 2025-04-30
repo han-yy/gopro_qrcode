@@ -63,6 +63,9 @@
   <div id="suggestionBox" style="background-color:#fff3cd;border:1px solid #ffeeba;padding:10px;margin-bottom:20px;display:none;"></div>
 
   <div class="control-panel">
+    <div style="width: 25%; color: black; font-weight: bold; text-align: left;"> Patient ID <input type="text" id="patientId" placeholder="Patient ID" style="flex: 1"></div>
+    <div style="width: 25%; color: black; font-weight: bold; text-align: left;"> Stage <input type="number" id="stageId" value="0" min="0" style="flex: 0.5"></div>
+    <div style="width: 100%; color: darkred; font-weight: bold;">Do not forget to click 'Generate' to make a change.</div>
     <label for="labelSelect">Label:</label>
     <select id="labelSelect">
       <option value="" disabled selected>Select a label</option>
@@ -72,10 +75,34 @@
       <option value="camera change START">camera change START</option>
       <option value="Day END">Day END</option>
       <option value="overheat CHANGE">overheat CHANGE</option>
+      <option value="Task">Task</option>
+      <option value="Stim">Stim</option>
       <option value="Other">Other</option>
     </select>
     <input type="text" id="otherLabel" placeholder="Enter custom label" disabled>
     <button id="generateBtn">Generate</button>
+  </div>
+
+  <div id="stimTab" style="display:none; margin-top: 20px; padding: 10px; border: 1px solid #ccc;">
+    <h3>Stimulation Settings</h3>
+    <div style="display: flex; gap: 20px;">
+      <div>
+        <h4>L</h4>
+        Frequency: <input type="number" id="lFreq" placeholder="Hz"><br>
+        Site: <input type="text" id="lSite"><br>
+        Polarity:
+        <label><input type="radio" name="lPol" value="+"> +</label>
+        <label><input type="radio" name="lPol" value="-"> -</label>
+      </div>
+      <div>
+        <h4>R</h4>
+        Frequency: <input type="number" id="rFreq" placeholder="Hz"><br>
+        Site: <input type="text" id="rSite"><br>
+        Polarity:
+        <label><input type="radio" name="rPol" value="+"> +</label>
+        <label><input type="radio" name="rPol" value="-"> -</label>
+      </div>
+    </div>
   </div>
 
   <div class="tabs">
@@ -103,7 +130,12 @@
       const mm = String(now.getMinutes()).padStart(2, '0');
       const ss = String(now.getSeconds()).padStart(2, '0');
       const timestamp = `[${hh}:${mm}:${ss}]`;
-      const finalText = `${noteText}\n${timestamp}`;
+      const patient = document.getElementById("patientId").value || "[ID]";
+      const stage = document.getElementById("stageId").value || "0";
+      const header = `${patient} ${stage}`;
+      const finalText = `${header}
+${noteText}
+${timestamp}`;
       const burnCommand = `*BURN=\"(0,60)${finalText}\"*BRNP=TL*BRNT=0mV!S`;
 
       document.getElementById("qrcodeNote").innerHTML = "";
@@ -162,12 +194,31 @@
     }
 
     document.getElementById("labelSelect").addEventListener("change", function () {
+      const value = this.value;
+      document.getElementById("otherLabel").disabled = !(value === "Other" || value === "Task");
+      document.getElementById("stimTab").style.display = value === "Stim" ? "block" : "none";
       document.getElementById("otherLabel").disabled = this.value !== "Other";
     });
 
     document.getElementById("generateBtn").addEventListener("click", function () {
+      const otherField = document.getElementById("otherLabel").value.trim();
       const selected = document.getElementById("labelSelect").value;
-      noteText = selected === "Other" ? (document.getElementById("otherLabel").value.trim() || "Custom Note") : selected;
+      if (selected === "Task") {
+        noteText = `Task ${otherField || ""}`;
+      } else if (selected === "Stim") {
+        const lFreq = document.getElementById("lFreq").value;
+        const lSite = document.getElementById("lSite").value;
+        const lPol = document.querySelector("input[name='lPol']:checked")?.value || "";
+        const rFreq = document.getElementById("rFreq").value;
+        const rSite = document.getElementById("rSite").value;
+        const rPol = document.querySelector("input[name='rPol']:checked")?.value || "";
+        noteText = `L[${lSite}][${lFreq}][${lPol}] & R[${rSite}][${rFreq}][${rPol}]`;
+      }
+       else if (selected === "Other") {
+        noteText = otherField || "Custom Note";
+      } else {
+        noteText = selected;
+      }
       lastAssigned = noteText;
       generateNoteQRCode();
     });
