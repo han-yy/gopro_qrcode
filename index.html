@@ -108,6 +108,7 @@
 </head>
 <body>
   <h2>GoPro QR Generator</h2>
+  <p style="color: red;">Remember to <b>SAVE</b> the log table before closing the page! </p>
   <div id="suggestionBox" style="background-color:#fff3cd;border:1px solid #ffeeba;padding:10px;margin-bottom:20px;"></div>
 
   <div class="control-panel">
@@ -125,9 +126,9 @@
         <option value="camera change START">camera change START</option>
         <option value="Day END">Day END</option>
         <option value="overheat CHANGE">overheat CHANGE</option>
-        <option value="Task">Task</option>
+        <option value="Task">Task (Generate!)</option>
         <option value="Stim">Stim</option>
-        <option value="Other">Other</option>
+        <option value="Other">Other (Generate!)</option>
       </select>
     <input type="text" id="otherLabel" placeholder="Enter custom label" disabled>
   </div>
@@ -314,7 +315,18 @@ document.getElementById("labelSelect").addEventListener("change", function () {
   const val = this.value;
   document.getElementById("otherLabel").disabled = !(val === "Other" || val === "Task");
   document.getElementById("nextStimBtn").style.display = val === "Stim" ? "inline-block" : "none";
-  document.getElementById("stimTabBtn").style.display = val === "Stim" ? "inline-block" : "none";
+
+  if (["Other", "Task"].includes(val)) return; // skip auto-update for these
+
+  if (val === "Stim") {
+    stimIndex = 0;
+    useStim(stimIndex);
+  } else {
+    noteText = val;
+  }
+
+  lastAssigned = noteText;
+  generateNoteQRCode();
 });
 
 document.getElementById("generateBtn").addEventListener("click", () => {
@@ -493,6 +505,12 @@ function addStimRow() {
 
   btnCell.appendChild(btnAdd);
 }
+
+document.addEventListener("keydown", function (event) {
+  if (event.key === "Enter") {
+    document.getElementById("generateBtn").click();
+  }
+});
 
 document.getElementById("nextStimBtn").addEventListener("click", function () {
   stimIndex = (stimIndex + 1) % stimList.length;
