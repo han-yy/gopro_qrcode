@@ -160,8 +160,8 @@
     <table id="stimTable" border="1" style="width: 100%; border-collapse: collapse;">
       <thead>
         <tr>
-          <th>#</th><th>LSite</th><th>LFreq</th><th>LPol</th>
-          <th>RSite</th><th>RFreq</th><th>RPol</th><th>Use</th>
+          <th>#</th><th>+Site</th><th>+Freq</th><th>+Side</th>
+          <th>-Site</th><th>-Freq</th><th>-Side</th><th>Use</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -342,7 +342,7 @@ document.getElementById("generateBtn").addEventListener("click", () => {
 
 function useStim(index) {
   const s = stimList[index];
-  noteText = `L[${s.LSite}][${s.LPol}] [${s.LFreq}] & R[${s.RSite}][${s.RPol}] [${s.RFreq}]`;
+  noteText = `[${s.ASide}][${s.Asite}]+ [${s.AFreq}] & R[${s.CSide}][${s.CSite}]- [${s.CFreq}]`;
   highlightStimRow(index);
 }
 
@@ -361,14 +361,14 @@ document.getElementById("stimUpload").addEventListener("change", function () {
     const lines = e.target.result.split(/[\r\n]+/).filter(line => line.trim() !== "");
     const headers = lines[0].trim().replace(/\uFEFF/, '').split(",");  // remove BOM
 
-    if (headers.length !== 6 || headers.join(',') !== "LSite,LFreq,LPol,RSite,RFreq,RPol") {
-      alert("Invalid header. Make sure the CSV header is: LSite,LFreq,LPol,RSite,RFreq,RPol");
+    if (headers.length !== 6 || headers.join(',') !== "ASite,AFreq,ASide,CSite,CFreq,CSide") {
+      alert("Invalid header. Make sure the CSV header is: ASite,AFreq,ASide,CSite,CFreq,CSide");
       return;
     }
 
     stimList = lines.slice(1).map(line => {
-      const [LSite, LFreq, LPol, RSite, RFreq, RPol] = line.split(",").map(s => s.trim());
-      return { LSite, LFreq, LPol, RSite, RFreq, RPol };
+      const [ASite, AFreq, ASide, CSite, CFreq, CSide] = line.split(",").map(s => s.trim());
+      return { ASite, AFreq, ASide, CSite, CFreq, CSide };
     });
 
     stimIndex = 0;
@@ -384,12 +384,12 @@ function renderStimTable() {
   stimList.forEach((stim, i) => {
     const row = tbody.insertRow();
     row.insertCell(0).innerText = i;
-    row.insertCell(1).innerText = stim.LSite;
-    row.insertCell(2).innerText = stim.LFreq;
-    row.insertCell(3).innerText = stim.LPol;
-    row.insertCell(4).innerText = stim.RSite;
-    row.insertCell(5).innerText = stim.RFreq;
-    row.insertCell(6).innerText = stim.RPol;
+    row.insertCell(1).innerText = stim.ASite;
+    row.insertCell(2).innerText = stim.AFreq;
+    row.insertCell(3).innerText = stim.ASide;
+    row.insertCell(4).innerText = stim.CSite;
+    row.insertCell(5).innerText = stim.CFreq;
+    row.insertCell(6).innerText = stim.CSide;
 
     // Highlight selection and apply stim
     row.onclick = () => {
