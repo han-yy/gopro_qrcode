@@ -448,12 +448,12 @@ function addStimRow() {
   btnAdd.innerText = "➕ Add";
   btnAdd.onclick = () => {
     const newStim = {
-      LSite: row.cells[1].innerText.trim(),
-      LFreq: row.cells[2].innerText.trim(),
-      LPol: row.cells[3].innerText.trim(),
-      RSite: row.cells[4].innerText.trim(),
-      RFreq: row.cells[5].innerText.trim(),
-      RPol: row.cells[6].innerText.trim(),
+      ASite: row.cells[1].innerText.trim(),
+      AFreq: row.cells[2].innerText.trim(),
+      ASide: row.cells[3].innerText.trim(),
+      CSite: row.cells[4].innerText.trim(),
+      CFreq: row.cells[5].innerText.trim(),
+      CSite: row.cells[6].innerText.trim(),
     };
 
     stimList.push(newStim); // officially joins the stimList
