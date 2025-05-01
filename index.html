@@ -8,25 +8,43 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 20px;
-      max-width: 700px;
+      padding: 1rem;
       margin: auto;
+      max-width: 1000px;
+      box-sizing: border-box;
     }
+
     .control-panel {
-      margin-bottom: 20px;
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      align-items: center;
+      margin-bottom: 1rem;
     }
-    label, select, input[type="text"], button {
-      padding: 8px;
-      font-size: 1em;
+
+    .control-panel label,
+    .control-panel select,
+    .control-panel input,
+    .control-panel button {
+      flex: 1 1 100%;
+      box-sizing: border-box;
+      font-size: 1rem;
     }
+
+    @media (min-width: 600px) {
+      .control-panel label,
+      .control-panel select,
+      .control-panel input,
+      .control-panel button {
+        flex: 1 1 auto;
+      }
+    }
+
     .tabs {
       display: flex;
-      margin-top: 20px;
+      flex-wrap: wrap;
+      margin-top: 1rem;
     }
+
     .tab {
       padding: 10px 20px;
       cursor: pointer;
@@ -34,26 +52,57 @@
       border: 1px solid #ccc;
       border-bottom: none;
     }
+
     .tab.active {
       background: #fff;
       font-weight: bold;
       color: red;
     }
+
     .tab-content {
       border: 1px solid #ccc;
       padding: 10px;
       display: none;
     }
+
     .tab-content.active {
       display: block;
     }
+
     #debugInfo {
       font-family: monospace;
       background-color: #f4f4f4;
       padding: 10px;
       border: 1px solid #ccc;
-      margin-top: 20px;
+      margin-top: 1rem;
       white-space: pre-wrap;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 0.5rem;
+      text-align: left;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    iframe {
+      width: 100%;
+      max-width: 300px;
+      border: none;
+    }
+
+    button {
+      cursor: pointer;
     }
   </style>
 </head>
@@ -81,11 +130,13 @@
         <option value="Other">Other</option>
       </select>
     <input type="text" id="otherLabel" placeholder="Enter custom label" disabled>
-    <button id="generateBtn">Generate</button>
-    
+  </div>
+  <div style="display: flex; align-items: center; gap: 10px;">
+    <button id="generateBtn" style="font-size: 1.2rem; padding: 10px 20px;">Generate</button>
   </div>
 
-  <div style="display: inline-block; align-items: center; gap: 10px;">
+
+  <div style="display: inline-block; align-items: center; gap: 10px; overflow-x: auto;">
     <label for="stimUpload">Stim List:</label>
     <input type="file" id="stimUpload" accept=".csv">
   </div>
@@ -97,7 +148,7 @@
   </div>
 
   <div id="time" class="tab-content">
-    <iframe src="https://gopro.github.io/labs/control/precisiontime/" width="270" height="270" frameborder="0"></iframe>
+    <iframe src="https://gopro.github.io/labs/control/precisiontime/" style="width:100%; max-width:300px;" height="270"></iframe>
   </div>
   <div id="note" class="tab-content active">
     <div id="qrcodeNote"></div>
@@ -120,7 +171,7 @@
 
   <div id="debugInfo" style="white-space: pre-wrap;"></div>
 
-  <div id="stimLogContainer" style="margin-top: 30px;">
+  <div id="stimLogContainer" style="margin-top: 30px; overflow-x: auto;">
     <h3>Session Log Table</h3>
     <table id="stimLogTable" border="1" style="width:100%; text-align:left; border-collapse: collapse;">
       <thead>
