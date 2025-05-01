@@ -195,7 +195,9 @@ let lastAssigned = "";
 let stimList = [], stimIndex = 0;
 
 function generateNoteQRCode() {
-  const now = new Date();
+  const patient = document.getElementById("patientId").value || "[ID]";
+  const stage = document.getElementById("stageId").value || "0";
+  const header = `${patient} ${stage}`;
   const finalText = `${header}\n${noteText}\n[yyyy-mm-dd HH:MM:SS]`;  // ✅ Dynamic timestamp tag
   const burnCommand = `*BURN="(0,200)${finalText}"*BRNP=TL*BRNT=0mV!S`;
 
@@ -206,8 +208,8 @@ function generateNoteQRCode() {
     height: 256
   });
 
-  document.getElementById("debugInfo").innerText = `Label: ${noteText}\nTimestamp: ${timestamp}\nCommand: ${burnCommand}`;
-  logStimRow(); 
+  document.getElementById("debugInfo").innerText = `Label: ${noteText}\nCommand: ${burnCommand}`;
+  logStimRow();
 }
 
 let selectedStimRow = null;
