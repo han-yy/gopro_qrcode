@@ -196,14 +196,7 @@ let stimList = [], stimIndex = 0;
 
 function generateNoteQRCode() {
   const now = new Date();
-  const hh = String(now.getHours()).padStart(2, '0');
-  const mm = String(now.getMinutes()).padStart(2, '0');
-  const ss = String(now.getSeconds()).padStart(2, '0');
-  const timestamp = `[${hh}:${mm}:${ss}]`;
-  const patient = document.getElementById("patientId").value || "[ID]";
-  const stage = document.getElementById("stageId").value || "0";
-  const header = `${patient} ${stage}`;
-  const finalText = `${header}\n${noteText}\n${timestamp}`;
+  const finalText = `${header}\n${noteText}\n[yyyy-mm-dd HH:MM:SS]`;  // ✅ Dynamic timestamp tag
   const burnCommand = `*BURN="(0,200)${finalText}"*BRNP=TL*BRNT=0mV!S`;
 
   document.getElementById("qrcodeNote").innerHTML = "";
