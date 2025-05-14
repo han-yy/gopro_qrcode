@@ -160,8 +160,7 @@
     <table id="stimTable" border="1" style="width: 100%; border-collapse: collapse;">
       <thead>
         <tr>
-          <th>#</th><th>+Site</th><th>+Freq</th><th>+Side</th>
-          <th>-Site</th><th>-Freq</th><th>-Side</th><th>Use</th>
+          <th>#</th><th>Session</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -361,14 +360,14 @@ document.getElementById("stimUpload").addEventListener("change", function () {
     const lines = e.target.result.split(/[\r\n]+/).filter(line => line.trim() !== "");
     const headers = lines[0].trim().replace(/\uFEFF/, '').split(",");  // remove BOM
 
-    if (headers.length !== 6 || headers.join(',') !== "ASite,AFreq,ASide,CSite,CFreq,CSide") {
-      alert("Invalid header. Make sure the CSV header is: ASite,AFreq,ASide,CSite,CFreq,CSide");
+    if (headers.length !== 1 || headers.join(',') !== "session") {
+      alert("Invalid header. Make sure the CSV header is: session");
       return;
     }
 
     stimList = lines.slice(1).map(line => {
-      const [ASite, AFreq, ASide, CSite, CFreq, CSide] = line.split(",").map(s => s.trim());
-      return { ASite, AFreq, ASide, CSite, CFreq, CSide };
+      const [session] = line.split(",").map(s => s.trim());
+      return {session};
     });
 
     stimIndex = 0;
@@ -384,12 +383,7 @@ function renderStimTable() {
   stimList.forEach((stim, i) => {
     const row = tbody.insertRow();
     row.insertCell(0).innerText = i;
-    row.insertCell(1).innerText = stim.ASite;
-    row.insertCell(2).innerText = stim.AFreq;
-    row.insertCell(3).innerText = stim.ASide;
-    row.insertCell(4).innerText = stim.CSite;
-    row.insertCell(5).innerText = stim.CFreq;
-    row.insertCell(6).innerText = stim.CSide;
+    row.insertCell(1).innerText = stim.session;
 
     // Highlight selection and apply stim
     row.onclick = () => {
@@ -409,7 +403,7 @@ function renderStimTable() {
     btnEdit.innerText = "✏️";
     btnEdit.onclick = (e) => {
       e.stopPropagation();
-      for (let j = 1; j <= 6; j++) {
+      for (let j = 1; j <= 1; j++) {
         row.cells[j].contentEditable = true;
         row.cells[j].style.background = "#fff8dc";
       }
@@ -422,7 +416,7 @@ function renderStimTable() {
       row.remove();
     };
 
-    const btnCell = row.insertCell(7);
+    const btnCell = row.insertCell(2);
     btnCell.appendChild(btnEdit);
     btnCell.appendChild(document.createTextNode(" "));
     btnCell.appendChild(btnDelete);
@@ -436,24 +430,19 @@ function addStimRow() {
 
   row.insertCell(0).innerText = index;
 
-  for (let i = 1; i <= 6; i++) {
+  for (let i = 1; i <= 1; i++) {
     const cell = row.insertCell(i);
     cell.contentEditable = true;
     cell.innerText = "";
     cell.style.background = "#fff8dc";
   }
 
-  const btnCell = row.insertCell(7);
+  const btnCell = row.insertCell(1);
   const btnAdd = document.createElement("button");
   btnAdd.innerText = "➕ Add";
   btnAdd.onclick = () => {
     const newStim = {
-      ASite: row.cells[1].innerText.trim(),
-      AFreq: row.cells[2].innerText.trim(),
-      ASide: row.cells[3].innerText.trim(),
-      CSite: row.cells[4].innerText.trim(),
-      CFreq: row.cells[5].innerText.trim(),
-      CSite: row.cells[6].innerText.trim(),
+      session: row.cells[1].innerText.trim(),
     };
 
     stimList.push(newStim); // officially joins the stimList
@@ -479,7 +468,7 @@ function addStimRow() {
     btnEdit.innerText = "✏️";
     btnEdit.onclick = (e) => {
       e.stopPropagation();
-      for (let j = 1; j <= 6; j++) {
+      for (let j = 1; j <= 1; j++) {
         row.cells[j].contentEditable = true;
         row.cells[j].style.background = "#fff8dc";
       }
