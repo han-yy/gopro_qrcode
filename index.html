@@ -6,89 +6,165 @@
   <title>GoPro QR Generator</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; padding: 1rem; margin: auto; max-width: 1000px; box-sizing: border-box;}
-    .control-panel { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 1rem;}
-    .control-panel label, .control-panel select, .control-panel input, .control-panel button { flex: 1 1 100%; box-sizing: border-box; font-size: 1rem;}
-    @media (min-width: 600px) { .control-panel label, .control-panel select, .control-panel input, .control-panel button { flex: 1 1 auto; } }
-    .tabs { display: flex; flex-wrap: wrap; margin-top: 1rem;}
-    .tab { padding: 10px 20px; cursor: pointer; background: #eee; border: 1px solid #ccc; border-bottom: none;}
-    .tab.active { background: #fff; font-weight: bold; color: red;}
-    .tab-content { border: 1px solid #ccc; padding: 10px; display: none;}
-    .tab-content.active { display: block;}
-    #debugInfo { font-family: monospace; background-color: #f4f4f4; padding: 10px; border: 1px solid #ccc; margin-top: 1rem; white-space: pre-wrap; overflow-x: auto;}
-    table { width: 100%; border-collapse: collapse; font-size: 0.95rem;}
-    th, td { border: 1px solid #ccc; padding: 0.5rem; text-align: left;}
-    .table-wrapper { overflow-x: auto;}
-    #time-iframe { width: 100vw !important; min-width: 900px; height: 80vh; min-height: 400px; border: none; display: block; margin: 0 auto;}
-    button { cursor: pointer;}
-    .above-tabs-row { margin-bottom: 10px;}
+    body {
+      font-family: Arial, sans-serif;
+      width: 100vw;
+      min-height: 100vh;
+      background: #fafbfc;
+      padding: 1rem;
+      margin: auto;
+      max-width: 1000px;
+      box-sizing: border-box;
+    }
+
+    .control-panel {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 1rem;
+    }
+
+    .control-panel label,
+    .control-panel select,
+    .control-panel input,
+    .control-panel button {
+      flex: 1 1 100%;
+      box-sizing: border-box;
+      font-size: 1rem;
+    }
+
+    @media (min-width: 600px) {
+      .control-panel label,
+      .control-panel select,
+      .control-panel input,
+      .control-panel button {
+        flex: 1 1 auto;
+      }
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      background: #eee;
+      border: 1px solid #ccc;
+      border-bottom: none;
+    }
+
+    .tab.active {
+      background: #fff;
+      font-weight: bold;
+      color: red;
+    }
+
+    .tab-content {
+      border: 1px solid #ccc;
+      padding: 10px;
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    #debugInfo {
+      font-family: monospace;
+      background-color: #f4f4f4;
+      padding: 10px;
+      border: 1px solid #ccc;
+      margin-top: 1rem;
+      white-space: pre-wrap;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 0.5rem;
+      text-align: left;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    iframe {
+      width: 100%;
+      max-width: 300px;
+      border: none;
+    }
+
+    button {
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
   <h2>GoPro QR Generator</h2>
   <p style="color: red;">Remember to <b>SAVE</b> the log table before closing the page! </p>
-  <div id="suggestionBox" style="background-color:#fff3cd;border:1px solid #ffeeba;padding:10px;margin-bottom:20px;display:none;"></div>
+  <div id="suggestionBox" style="background-color:#fff3cd;border:1px solid #ffeeba;padding:10px;margin-bottom:20px;"></div>
 
   <div class="control-panel">
     <label>Patient ID: <input type="text" id="patientId" placeholder="Patient ID"></label>
     <label>Stage: <input type="number" id="stageId" value="0"></label>
   </div>
+
   <div style="display: flex; align-items: center; gap: 10px;">
-    <label for="labelSelect">Label:</label>
-    <select id="labelSelect">
-      <option value="" disabled selected>Select a label</option>
-      <option value="Day TEST">Day TEST</option>
-      <option value="Day START">Day START</option>
-      <option value="camera change STOP">camera change STOP</option>
-      <option value="camera change START">camera change START</option>
-      <option value="Day END">Day END</option>
-      <option value="overheat CHANGE">overheat CHANGE</option>
-      <option value="Task">Task (Generate!)</option>
-      <option value="Stim">Stim</option>
-      <option value="Other">Other (Generate!)</option>
-    </select>
+      <label for="labelSelect">Label:</label>
+      <select id="labelSelect">
+        <option value="" disabled selected>Select a label</option>
+        <option value="Day TEST">Day TEST</option>
+        <option value="Day START">Day START</option>
+        <option value="camera change STOP">camera change STOP</option>
+        <option value="camera change START">camera change START</option>
+        <option value="Day END">Day END</option>
+        <option value="overheat CHANGE">overheat CHANGE</option>
+        <option value="Task">Task (Generate!)</option>
+        <option value="Stim">Stim</option>
+        <option value="Other">Other (Generate!)</option>
+      </select>
     <input type="text" id="otherLabel" placeholder="Enter custom label" disabled>
   </div>
   <div style="display: flex; align-items: center; gap: 10px;">
     <button id="generateBtn" style="font-size: 1.2rem; padding: 10px 20px;">Generate</button>
   </div>
+
+
   <div style="display: inline-block; align-items: center; gap: 10px; overflow-x: auto;">
     <label for="stimUpload">Stim List:</label>
     <input type="file" id="stimUpload" accept=".csv">
   </div>
 
-  <div class="above-tabs-row">
-    <button onclick="window.open('https://gopro.github.io/labs/control/precisiontime/','_blank')" style="font-size:1rem; background:#2176ae; color:#fff; padding:8px 16px; border-radius:8px; border:none;">
-      Open GoPro PrecisionTime Page
-    </button>
+  <div class="button">
+    <a href="https://gopro.github.io/labs/control/precisiontime/" target="_blank">
+      <button type="button">Precise Time</button>
+    </a>
   </div>
 
   <div class="tabs">
-    <div class="tab" id="tab-time" onclick="showTab('time')">Time</div>
-    <div class="tab" id="tab-timestamp" onclick="showTab('timestamp')">Timestamp</div>
-    <div class="tab active" id="noteTab" onclick="showTab('note')">Note</div>
+      <div class="tab" onclick="showTab('time')">Time</div>
+      <div class="tab active" id="noteTab" onclick="showTab('note')">Note</div>
+      <div class="tab" onclick="showTab('backupTime')">Backup</div>
   </div>
 
   <div id="time" class="tab-content">
-    <iframe id="time-iframe" src="https://gopro.github.io/labs/control/precisiontime/"></iframe>
-  </div>
-  <div id="timestamp" class="tab-content">
-    <h4>GoPro Timestamp QR Command Generator</h4>
-    <p>This QR and command will sync GoPro clock (UTC). Show QR to camera, or copy command.</p>
-    <div style="display: flex;flex-wrap:wrap;gap:24px;">
-      <div>
-        <div id="goproTimestampQR"></div>
-      </div>
-      <div style="flex:1;min-width:240px">
-        <textarea id="goproTimestampCmd" style="width:100%;min-height:2.5em;font-size:1.1em;" readonly></textarea>
-        <button onclick="copyTimestampCmd()" style="margin-top: 6px;">Copy Command</button>
-        <span id="timestampCmdCopied" style="color:green;display:none;">Copied!</span>
-        <div id="timestampCurrent" style="color: #666; margin-top: 5px; font-size:0.96em;"></div>
-      </div>
-    </div>
+    <iframe src="https://gopro.github.io/labs/control/precisiontime/" style="width:100%; min-width:400px;" height="400"></iframe>
   </div>
   <div id="note" class="tab-content active">
     <div id="qrcodeNote"></div>
+  </div>
+  <div id="backupTime" class="tab-content">
+    <div id="qrcodeBackupTime"></div>
   </div>
 
   <div id="stimListSection" style="margin-top: 30px;">
@@ -122,57 +198,19 @@
     </div>
   </div>
 
+
 <script>
 let qrNote;
 let noteText = "No label";
 let lastAssigned = "";
 let stimList = [], stimIndex = 0;
-let selectedStimRow = null;
-let suggestionTimer = null;
+let backupNote;
 
-// -------- Smart Notification Feature ----------
-function getSuggestedLabel() {
-  const now = new Date();
-  const minutes = now.getHours() * 60 + now.getMinutes();
-  const isAround = (target, range) => Math.abs(minutes - target) <= range;
-  if (minutes >= 420 && minutes <= 465) return "Day TEST";
-  if (isAround(480, 10)) return "Day START";
-  if ([660, 840, 1020].some(t => isAround(t, 15))) {
-    return lastAssigned.includes("STOP") ? "camera change START" : "camera change STOP";
-  }
-  if (isAround(1200, 30)) return "Day END";
-  return "overheat CHANGE";
-}
-function suggestLabelIfApplicable() {
-  const label = getSuggestedLabel();
-  const box = document.getElementById("suggestionBox");
-  if (!label) { box.style.display = "none"; return; }
-  box.innerHTML = `Change to <strong>${label}</strong>? <button onclick="applySuggestedLabel('${label}')">OK</button> <button onclick="dismissSuggestion()">No</button>`;
-  box.style.display = "block";
-}
-function applySuggestedLabel(label) {
-  document.getElementById("labelSelect").value = label;
-  document.getElementById("otherLabel").disabled = true;
-  noteText = label;
-  lastAssigned = label;
-  generateNoteQRCode();
-  document.getElementById("suggestionBox").style.display = "none";
-}
-function dismissSuggestion() {
-  document.getElementById("suggestionBox").style.display = "none";
-}
-function scheduleSuggestion() {
-  if(suggestionTimer) clearInterval(suggestionTimer);
-  suggestLabelIfApplicable();
-  suggestionTimer = setInterval(suggestLabelIfApplicable, 90*1000);
-}
-
-// -------- QR Code + Log Feature --------------
 function generateNoteQRCode() {
   const patient = document.getElementById("patientId").value || "[ID]";
   const stage = document.getElementById("stageId").value || "0";
   const header = `${patient} ${stage}`;
-  const finalText = `${header}\n${noteText}\n[yyyy-mm-dd HH:MM:SS]`;
+  const finalText = `${header}\n${noteText}\n[yyyy-mm-dd HH:MM:SS]`;  // ✅ Dynamic timestamp tag
   const burnCommand = `*BURN="(0,200)${finalText}"*BRNP=TL*BRNT=0mV!S`;
 
   document.getElementById("qrcodeNote").innerHTML = "";
@@ -185,6 +223,9 @@ function generateNoteQRCode() {
   document.getElementById("debugInfo").innerText = `Label: ${noteText}\nCommand: ${burnCommand}`;
   logStimRow();
 }
+
+let selectedStimRow = null;
+
 function addStimLogRow(ts, label, pid, stage) {
   const table = document.getElementById("stimLogTable").querySelector("tbody");
   const row = table.insertRow();
@@ -198,6 +239,7 @@ function addStimLogRow(ts, label, pid, stage) {
     selectedStimRow = row;
   };
 }
+
 function logStimRow() {
   const ts = Date.now();
   const label = noteText;
@@ -205,6 +247,7 @@ function logStimRow() {
   const stage = document.getElementById("stageId").value || "0";
   addStimLogRow(ts, label, pid, stage);
 }
+
 function editStimLog() {
   if (!selectedStimRow) return alert("Please select a row to edit.");
   for (let i = 1; i <= 3; i++) {
@@ -212,11 +255,13 @@ function editStimLog() {
     selectedStimRow.cells[i].style.background = "#fff8dc";
   }
 }
+
 function deleteStimLog() {
   if (!selectedStimRow) return alert("Please select a row to delete.");
   selectedStimRow.remove();
   selectedStimRow = null;
 }
+
 function downloadStimLog() {
   const rows = document.querySelectorAll("#stimLogTable tbody tr");
   let csv = "Timestamp,Label,Patient ID,Stage\n";
@@ -227,27 +272,122 @@ function downloadStimLog() {
   const blob = new Blob([csv], { type: "text/csv" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
+  // Set the filename to include the current date and time
   const now = new Date();
   const dateStr = now.toISOString().replace(/:/g, "-").split(".")[0];
   link.download = `session_log_${dateStr}.csv`;
   link.click();
 }
 
-// --- Label & Note controls
+function getSuggestedLabel() {
+  const now = new Date();
+  const minutes = now.getHours() * 60 + now.getMinutes();
+  const isAround = (target, range) => Math.abs(minutes - target) <= range;
+  if (minutes >= 420 && minutes <= 465) return "Day TEST";
+  if (isAround(480, 10)) return "Day START";
+  if ([660, 840, 1020].some(t => isAround(t, 15))) {
+    return lastAssigned.includes("STOP") ? "camera change START" : "camera change STOP";
+  }
+  if (isAround(1200, 30)) return "Day END";
+  return "overheat CHANGE";
+}
+
+function suggestLabelIfApplicable() {
+  const label = getSuggestedLabel();
+  const box = document.getElementById("suggestionBox");
+  box.innerHTML = `Change to <strong>${label}</strong>? <button onclick="applySuggestedLabel('${label}')">OK</button> <button onclick="dismissSuggestion()">No</button>`;
+  box.style.display = "block";
+}
+
+function applySuggestedLabel(label) {
+  document.getElementById("labelSelect").value = label;
+  document.getElementById("otherLabel").disabled = true;
+  noteText = label;
+  lastAssigned = label;
+  generateNoteQRCode();
+}
+
+function dismissSuggestion() {
+  suggestLabelIfApplicable();
+}
+
+// Add this function before the showTab function
+
+function startBackupRefresh() {
+  const refreshInterval = 1000 / 30; // 30fps
+  
+  // Create QR instance only once
+  if (!backupNote) {
+    backupNote = new QRCode(document.getElementById("qrcodeBackupTime"), {
+      text: "initializing...",
+      width: 256,
+      height: 256
+    });
+  }
+
+  // In the startBackupRefresh function, update the updateQR function:
+  const updateQR = () => {
+      if (document.getElementById('backupTime').classList.contains('active')) {
+          const now = new Date();
+          const pad = (n, len = 2) => n.toString().padStart(len, "0");
+          const y = pad(now.getFullYear() % 100);
+          const mo = pad(now.getMonth() + 1);
+          const d = pad(now.getDate());
+          const h = pad(now.getHours());
+          const mi = pad(now.getMinutes());
+          const s = pad(now.getSeconds());
+          const ms = pad(now.getMilliseconds(), 3);
+          const df30str = `${y}${mo}${d}${h}${mi}${s}.${ms}`;
+          const backupCmd = `oT${df30str}`;
+          
+          backupNote.clear(); // Clear the existing QR code
+          backupNote.makeCode(backupCmd); // Generate new QR code
+      }
+  };
+
+  // Initial update
+  updateQR();
+  
+  // Return the interval
+  return setInterval(updateQR, refreshInterval);
+}
+
+// Modify the showTab function to handle the refresh interval:
+function showTab(tabId) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.tab[onclick*='${tabId}']`).classList.add('active');
+  document.getElementById(tabId).classList.add('active');
+  
+  // Clear any existing refresh interval
+  if (window.backupRefreshInterval) {
+    clearInterval(window.backupRefreshInterval);
+  }
+  
+  // Start refresh if backup tab is selected
+  if (tabId === 'backupTime') {
+    window.backupRefreshInterval = startBackupRefresh();
+  }
+}
+
 document.getElementById("labelSelect").addEventListener("change", function () {
   const val = this.value;
   document.getElementById("otherLabel").disabled = !(val === "Other" || val === "Task");
   document.getElementById("nextStimBtn").style.display = val === "Stim" ? "inline-block" : "none";
-  if (["Other", "Task"].includes(val)) return;
+
+  if (["Other", "Task"].includes(val)) return; // skip auto-update for these
+
   if (val === "Stim") {
     stimIndex = 0;
     useStim(stimIndex);
   } else {
     noteText = val;
   }
+
   lastAssigned = noteText;
   generateNoteQRCode();
 });
+
 document.getElementById("generateBtn").addEventListener("click", () => {
   const label = document.getElementById("labelSelect").value;
   const custom = document.getElementById("otherLabel").value.trim();
@@ -263,38 +403,45 @@ document.getElementById("generateBtn").addEventListener("click", () => {
   lastAssigned = noteText;
   generateNoteQRCode();
 });
+
 function useStim(index) {
-  const s = stimList[index];
-  noteText = s ? s.session : "";
+  const stim = stimList[index];
+  noteText = 'Stim ' + stim.session;
   highlightStimRow(index);
 }
+
 function highlightStimRow(index) {
   const rows = document.querySelectorAll("#stimTable tbody tr");
   rows.forEach((row, i) => {
     row.style.background = i === index ? "#d0f0ff" : "";
   });
 }
+
 document.getElementById("stimUpload").addEventListener("change", function () {
   const file = this.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = function (e) {
     const lines = e.target.result.split(/[\r\n]+/).filter(line => line.trim() !== "");
-    const headers = lines[0].trim().replace(/\uFEFF/, '').split(",");
+    const headers = lines[0].trim().replace(/\uFEFF/, '').split(",");  // remove BOM
+
     if (headers.length !== 1 || headers.join(',') !== "session") {
       alert("Invalid header. Make sure the CSV header is: session");
       return;
     }
+
     stimList = lines.slice(1).map(line => {
       const [session] = line.split(",").map(s => s.trim());
       return {session};
     });
+
     stimIndex = 0;
     renderStimTable();
     alert("Stim list loaded!");
   };
   reader.readAsText(file);
 });
+
 function renderStimTable() {
   const tbody = document.querySelector("#stimTable tbody");
   tbody.innerHTML = "";
@@ -302,48 +449,141 @@ function renderStimTable() {
     const row = tbody.insertRow();
     row.insertCell(0).innerText = i;
     row.insertCell(1).innerText = stim.session;
-    const btnCell = row.insertCell(2);
-    const btnEdit = document.createElement("button");
-    btnEdit.innerText = "✏️";
-    btnEdit.onclick = (e) => {
-      e.stopPropagation();
-      row.cells[1].contentEditable = true;
-      row.cells[1].style.background = "#fff8dc";
-    };
-    const btnDelete = document.createElement("button");
-    btnDelete.innerText = "🗑️";
-    btnDelete.onclick = (e) => {
-      e.stopPropagation();
-      stimList.splice(i, 1);
-      renderStimTable();
-    };
-    btnCell.appendChild(btnEdit);
-    btnCell.appendChild(document.createTextNode(" "));
-    btnCell.appendChild(btnDelete);
+
+    // Highlight selection and apply stim
     row.onclick = () => {
       stimIndex = i;
+
       const label = document.getElementById("labelSelect").value;
       if (label === "Stim") {
         useStim(i);
         generateNoteQRCode();
         highlightStimRow(i);
       } else {
-        highlightStimRow(i);
+        highlightStimRow(i);  // still show the row is selected, but don’t update the QR
       }
     };
+
+    const btnEdit = document.createElement("button");
+    btnEdit.innerText = "✏️";
+    btnEdit.onclick = (e) => {
+      e.stopPropagation();
+      for (let j = 1; j <= 1; j++) {
+        row.cells[j].contentEditable = true;
+        row.cells[j].style.background = "#fff8dc";
+      }
+    };
+
+    const btnDelete = document.createElement("button");
+    btnDelete.innerText = "🗑️";
+    btnDelete.onclick = (e) => {
+      e.stopPropagation();
+      row.remove();
+    };
+
+    const btnCell = row.insertCell(2);
+    btnCell.appendChild(btnEdit);
+    btnCell.appendChild(document.createTextNode(" "));
+    btnCell.appendChild(btnDelete);
   });
 }
+
 function addStimRow() {
   const tbody = document.querySelector("#stimTable tbody");
   const index = tbody.rows.length;
   const row = tbody.insertRow();
+
   row.insertCell(0).innerText = index;
-  let cellSession = row.insertCell(1);
-  cellSession.contentEditable = true;
-  cellSession.innerText = "";
-  cellSession.style.background = "#fff8dc";
+
+  for (let i = 1; i <= 1; i++) {
+    const cell = row.insertCell(i);
+    cell.contentEditable = true;
+    cell.innerText = "";
+    cell.style.background = "#fff8dc";
+  }
+
   const btnCell = row.insertCell(2);
   const btnAdd = document.createElement("button");
   btnAdd.innerText = "➕ Add";
   btnAdd.onclick = () => {
-    const newStim =
+    const newStim = {
+      session: row.cells[1].innerText.trim(),
+    };
+
+    stimList.push(newStim); // officially joins the stimList
+
+    // Make row behave like a selectable stim
+    row.onclick = () => {
+      stimIndex = stimList.length - 1;
+
+      const label = document.getElementById("labelSelect").value;
+      if (label === "Stim") {
+        useStim(stimIndex);
+        generateNoteQRCode();
+        highlightStimRow(stimIndex);
+      } else {
+        highlightStimRow(stimIndex);
+      }
+    };
+
+    // Replace "Add" button with Edit/Delete buttons
+    btnCell.innerHTML = "";
+
+    const btnEdit = document.createElement("button");
+    btnEdit.innerText = "✏️";
+    btnEdit.onclick = (e) => {
+      e.stopPropagation();
+      for (let j = 1; j <= 1; j++) {
+        row.cells[j].contentEditable = true;
+        row.cells[j].style.background = "#fff8dc";
+      }
+    };
+
+    const btnDelete = document.createElement("button");
+    btnDelete.innerText = "🗑️";
+    btnDelete.onclick = (e) => {
+      e.stopPropagation();
+      row.remove();
+      stimList.splice(stimIndex, 1);
+    };
+
+    btnCell.appendChild(btnEdit);
+    btnCell.appendChild(document.createTextNode(" "));
+    btnCell.appendChild(btnDelete);
+  };
+
+  btnCell.appendChild(btnAdd);
+}
+
+document.addEventListener("keydown", function (event) {
+  if (event.key === "Enter") {
+    document.getElementById("generateBtn").click();
+  }
+});
+
+document.getElementById("nextStimBtn").addEventListener("click", function () {
+  stimIndex = (stimIndex + 1) % stimList.length;
+  useStim(stimIndex);
+  generateNoteQRCode();
+});
+
+// Replace the window.onload function with this version
+window.onload = function () {
+    suggestLabelIfApplicable();
+    generateNoteQRCode();
+    
+    // Initialize backup QR code
+    backupNote = new QRCode(document.getElementById("qrcodeBackupTime"), {
+        text: "initializing...",
+        width: 256,
+        height: 256
+    });
+    
+    // Start refresh if backup tab is active
+    if (document.getElementById('backupTime').classList.contains('active')) {
+        window.backupRefreshInterval = startBackupRefresh();
+    }
+};
+</script>
+</body>
+</html>
