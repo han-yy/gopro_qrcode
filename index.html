@@ -6,105 +6,28 @@
   <title>GoPro QR Generator</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 1rem;
-      margin: auto;
-      max-width: 1000px;
-      box-sizing: border-box;
-    }
-    .control-panel {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 1rem;
-    }
-    .control-panel label,
-    .control-panel select,
-    .control-panel input,
-    .control-panel button {
-      flex: 1 1 100%;
-      box-sizing: border-box;
-      font-size: 1rem;
-    }
-    @media (min-width: 600px) {
-      .control-panel label,
-      .control-panel select,
-      .control-panel input,
-      .control-panel button {
-        flex: 1 1 auto;
-      }
-    }
-    .tabs {
-      display: flex;
-      flex-wrap: wrap;
-      margin-top: 1rem;
-    }
-    .tab {
-      padding: 10px 20px;
-      cursor: pointer;
-      background: #eee;
-      border: 1px solid #ccc;
-      border-bottom: none;
-    }
-    .tab.active {
-      background: #fff;
-      font-weight: bold;
-      color: red;
-    }
-    .tab-content {
-      border: 1px solid #ccc;
-      padding: 10px;
-      display: none;
-    }
-    .tab-content.active {
-      display: block;
-    }
-    #debugInfo {
-      font-family: monospace;
-      background-color: #f4f4f4;
-      padding: 10px;
-      border: 1px solid #ccc;
-      margin-top: 1rem;
-      white-space: pre-wrap;
-      overflow-x: auto;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.95rem;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 0.5rem;
-      text-align: left;
-    }
-    .table-wrapper {
-      overflow-x: auto;
-    }
-    /* Make iframe really wide and tall for Time tab */
-    #time-iframe {
-      width: 100vw !important;
-      min-width: 900px;
-      height: 80vh;
-      min-height: 400px;
-      border: none;
-      display: block;
-      margin: 0 auto;
-    }
-    button {
-      cursor: pointer;
-    }
-    /* Extra for button row above tabs */
-    .above-tabs-row {
-      margin-bottom: 10px;
-    }
+    body { font-family: Arial, sans-serif; padding: 1rem; margin: auto; max-width: 1000px; box-sizing: border-box;}
+    .control-panel { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 1rem;}
+    .control-panel label, .control-panel select, .control-panel input, .control-panel button { flex: 1 1 100%; box-sizing: border-box; font-size: 1rem;}
+    @media (min-width: 600px) { .control-panel label, .control-panel select, .control-panel input, .control-panel button { flex: 1 1 auto; } }
+    .tabs { display: flex; flex-wrap: wrap; margin-top: 1rem;}
+    .tab { padding: 10px 20px; cursor: pointer; background: #eee; border: 1px solid #ccc; border-bottom: none;}
+    .tab.active { background: #fff; font-weight: bold; color: red;}
+    .tab-content { border: 1px solid #ccc; padding: 10px; display: none;}
+    .tab-content.active { display: block;}
+    #debugInfo { font-family: monospace; background-color: #f4f4f4; padding: 10px; border: 1px solid #ccc; margin-top: 1rem; white-space: pre-wrap; overflow-x: auto;}
+    table { width: 100%; border-collapse: collapse; font-size: 0.95rem;}
+    th, td { border: 1px solid #ccc; padding: 0.5rem; text-align: left;}
+    .table-wrapper { overflow-x: auto;}
+    #time-iframe { width: 100vw !important; min-width: 900px; height: 80vh; min-height: 400px; border: none; display: block; margin: 0 auto;}
+    button { cursor: pointer;}
+    .above-tabs-row { margin-bottom: 10px;}
   </style>
 </head>
 <body>
   <h2>GoPro QR Generator</h2>
   <p style="color: red;">Remember to <b>SAVE</b> the log table before closing the page! </p>
-  <div id="suggestionBox" style="background-color:#fff3cd;border:1px solid #ffeeba;padding:10px;margin-bottom:20px;"></div>
+  <div id="suggestionBox" style="background-color:#fff3cd;border:1px solid #ffeeba;padding:10px;margin-bottom:20px;display:none;"></div>
 
   <div class="control-panel">
     <label>Patient ID: <input type="text" id="patientId" placeholder="Patient ID"></label>
@@ -134,7 +57,6 @@
     <input type="file" id="stimUpload" accept=".csv">
   </div>
 
-  <!-- GoPro PrecisionTime Button above tabs -->
   <div class="above-tabs-row">
     <button onclick="window.open('https://gopro.github.io/labs/control/precisiontime/','_blank')" style="font-size:1rem; background:#2176ae; color:#fff; padding:8px 16px; border-radius:8px; border:none;">
       Open GoPro PrecisionTime Page
@@ -142,8 +64,8 @@
   </div>
 
   <div class="tabs">
-    <div class="tab" onclick="showTab('time')">Time</div>
-    <div class="tab" onclick="showTab('timestamp')">Timestamp</div>
+    <div class="tab" id="tab-time" onclick="showTab('time')">Time</div>
+    <div class="tab" id="tab-timestamp" onclick="showTab('timestamp')">Timestamp</div>
     <div class="tab active" id="noteTab" onclick="showTab('note')">Note</div>
   </div>
 
@@ -151,14 +73,19 @@
     <iframe id="time-iframe" src="https://gopro.github.io/labs/control/precisiontime/"></iframe>
   </div>
   <div id="timestamp" class="tab-content">
-    <h4>GoPro Timestamp Command Generator</h4>
-    <p>This command sets GoPro time to the current internet (UTC) time. Copy and show QR to camera:</p>
-    <div style="margin: 1em 0;">
-      <textarea id="goproTimestampCmd" style="width:100%;min-height:2.5em;font-size:1.1em;" readonly></textarea>
-      <button onclick="copyTimestampCmd()" style="margin-top: 6px;">Copy Command</button>
-      <span id="timestampCmdCopied" style="color:green;display:none;">Copied!</span>
+    <h4>GoPro Timestamp QR Command Generator</h4>
+    <p>This QR and command will sync GoPro clock (UTC). Show QR to camera, or copy command.</p>
+    <div style="display: flex;flex-wrap:wrap;gap:24px;">
+      <div>
+        <div id="goproTimestampQR"></div>
+      </div>
+      <div style="flex:1;min-width:240px">
+        <textarea id="goproTimestampCmd" style="width:100%;min-height:2.5em;font-size:1.1em;" readonly></textarea>
+        <button onclick="copyTimestampCmd()" style="margin-top: 6px;">Copy Command</button>
+        <span id="timestampCmdCopied" style="color:green;display:none;">Copied!</span>
+        <div id="timestampCurrent" style="color: #666; margin-top: 5px; font-size:0.96em;"></div>
+      </div>
     </div>
-    <div id="timestampCurrent" style="color: #666; margin-top: 5px; font-size:0.96em;"></div>
   </div>
   <div id="note" class="tab-content active">
     <div id="qrcodeNote"></div>
@@ -200,12 +127,52 @@ let qrNote;
 let noteText = "No label";
 let lastAssigned = "";
 let stimList = [], stimIndex = 0;
+let selectedStimRow = null;
+let suggestionTimer = null;
 
+// -------- Smart Notification Feature ----------
+function getSuggestedLabel() {
+  const now = new Date();
+  const minutes = now.getHours() * 60 + now.getMinutes();
+  const isAround = (target, range) => Math.abs(minutes - target) <= range;
+  if (minutes >= 420 && minutes <= 465) return "Day TEST";
+  if (isAround(480, 10)) return "Day START";
+  if ([660, 840, 1020].some(t => isAround(t, 15))) {
+    return lastAssigned.includes("STOP") ? "camera change START" : "camera change STOP";
+  }
+  if (isAround(1200, 30)) return "Day END";
+  return "overheat CHANGE";
+}
+function suggestLabelIfApplicable() {
+  const label = getSuggestedLabel();
+  const box = document.getElementById("suggestionBox");
+  if (!label) { box.style.display = "none"; return; }
+  box.innerHTML = `Change to <strong>${label}</strong>? <button onclick="applySuggestedLabel('${label}')">OK</button> <button onclick="dismissSuggestion()">No</button>`;
+  box.style.display = "block";
+}
+function applySuggestedLabel(label) {
+  document.getElementById("labelSelect").value = label;
+  document.getElementById("otherLabel").disabled = true;
+  noteText = label;
+  lastAssigned = label;
+  generateNoteQRCode();
+  document.getElementById("suggestionBox").style.display = "none";
+}
+function dismissSuggestion() {
+  document.getElementById("suggestionBox").style.display = "none";
+}
+function scheduleSuggestion() {
+  if(suggestionTimer) clearInterval(suggestionTimer);
+  suggestLabelIfApplicable();
+  suggestionTimer = setInterval(suggestLabelIfApplicable, 90*1000);
+}
+
+// -------- QR Code + Log Feature --------------
 function generateNoteQRCode() {
   const patient = document.getElementById("patientId").value || "[ID]";
   const stage = document.getElementById("stageId").value || "0";
   const header = `${patient} ${stage}`;
-  const finalText = `${header}\n${noteText}\n[yyyy-mm-dd HH:MM:SS]`;  // ✅ Dynamic timestamp tag
+  const finalText = `${header}\n${noteText}\n[yyyy-mm-dd HH:MM:SS]`;
   const burnCommand = `*BURN="(0,200)${finalText}"*BRNP=TL*BRNT=0mV!S`;
 
   document.getElementById("qrcodeNote").innerHTML = "";
@@ -218,8 +185,6 @@ function generateNoteQRCode() {
   document.getElementById("debugInfo").innerText = `Label: ${noteText}\nCommand: ${burnCommand}`;
   logStimRow();
 }
-
-let selectedStimRow = null;
 function addStimLogRow(ts, label, pid, stage) {
   const table = document.getElementById("stimLogTable").querySelector("tbody");
   const row = table.insertRow();
@@ -267,40 +232,6 @@ function downloadStimLog() {
   link.download = `session_log_${dateStr}.csv`;
   link.click();
 }
-function getSuggestedLabel() {
-  const now = new Date();
-  const minutes = now.getHours() * 60 + now.getMinutes();
-  const isAround = (target, range) => Math.abs(minutes - target) <= range;
-  if (minutes >= 420 && minutes <= 465) return "Day TEST";
-  if (isAround(480, 10)) return "Day START";
-  if ([660, 840, 1020].some(t => isAround(t, 15))) {
-    return lastAssigned.includes("STOP") ? "camera change START" : "camera change STOP";
-  }
-  if (isAround(1200, 30)) return "Day END";
-  return "overheat CHANGE";
-}
-function suggestLabelIfApplicable() {
-  const label = getSuggestedLabel();
-  const box = document.getElementById("suggestionBox");
-  box.innerHTML = `Change to <strong>${label}</strong>? <button onclick="applySuggestedLabel('${label}')">OK</button> <button onclick="dismissSuggestion()">No</button>`;
-  box.style.display = "block";
-}
-function applySuggestedLabel(label) {
-  document.getElementById("labelSelect").value = label;
-  document.getElementById("otherLabel").disabled = true;
-  noteText = label;
-  lastAssigned = label;
-  generateNoteQRCode();
-}
-function dismissSuggestion() {
-  suggestLabelIfApplicable();
-}
-function showTab(tabId) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  document.querySelector(`.tab[onclick*='${tabId}']`).classList.add('active');
-  document.getElementById(tabId).classList.add('active');
-}
 
 // --- Label & Note controls
 document.getElementById("labelSelect").addEventListener("change", function () {
@@ -334,7 +265,7 @@ document.getElementById("generateBtn").addEventListener("click", () => {
 });
 function useStim(index) {
   const s = stimList[index];
-  noteText = s ? `[${s.ASide}][${s.Asite}]+ [${s.AFreq}] & R[${s.CSide}][${s.CSite}]- [${s.CFreq}]` : "";
+  noteText = s ? s.session : "";
   highlightStimRow(index);
 }
 function highlightStimRow(index) {
@@ -349,7 +280,7 @@ document.getElementById("stimUpload").addEventListener("change", function () {
   const reader = new FileReader();
   reader.onload = function (e) {
     const lines = e.target.result.split(/[\r\n]+/).filter(line => line.trim() !== "");
-    const headers = lines[0].trim().replace(/\uFEFF/, '').split(",");  // remove BOM
+    const headers = lines[0].trim().replace(/\uFEFF/, '').split(",");
     if (headers.length !== 1 || headers.join(',') !== "session") {
       alert("Invalid header. Make sure the CSV header is: session");
       return;
@@ -364,7 +295,6 @@ document.getElementById("stimUpload").addEventListener("change", function () {
   };
   reader.readAsText(file);
 });
-// ----- Updated renderStimTable and addStimRow
 function renderStimTable() {
   const tbody = document.querySelector("#stimTable tbody");
   tbody.innerHTML = "";
@@ -390,7 +320,6 @@ function renderStimTable() {
     btnCell.appendChild(btnEdit);
     btnCell.appendChild(document.createTextNode(" "));
     btnCell.appendChild(btnDelete);
-
     row.onclick = () => {
       stimIndex = i;
       const label = document.getElementById("labelSelect").value;
@@ -405,4 +334,16 @@ function renderStimTable() {
   });
 }
 function addStimRow() {
-  const tbody = document.querySelector
+  const tbody = document.querySelector("#stimTable tbody");
+  const index = tbody.rows.length;
+  const row = tbody.insertRow();
+  row.insertCell(0).innerText = index;
+  let cellSession = row.insertCell(1);
+  cellSession.contentEditable = true;
+  cellSession.innerText = "";
+  cellSession.style.background = "#fff8dc";
+  const btnCell = row.insertCell(2);
+  const btnAdd = document.createElement("button");
+  btnAdd.innerText = "➕ Add";
+  btnAdd.onclick = () => {
+    const newStim =
