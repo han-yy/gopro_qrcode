@@ -130,7 +130,7 @@
         <option value="Day END">Day END</option>
         <option value="overheat CHANGE">overheat CHANGE</option>
         <option value="Task">Task (Generate!)</option>
-        <option value="Stim">Stim</option>
+        <option value="Stim">Stim (Generate!)</option>
         <option value="Other">Other (Generate!)</option>
       </select>
     <input type="text" id="otherLabel" placeholder="Enter custom label" disabled>
@@ -140,10 +140,10 @@
   </div>
 
 
-  <div style="display: inline-block; align-items: center; gap: 10px; overflow-x: auto;">
+<!--   <div style="display: inline-block; align-items: center; gap: 10px; overflow-x: auto;">
     <label for="stimUpload">Stim List:</label>
     <input type="file" id="stimUpload" accept=".csv">
-  </div>
+  </div> -->
 
   <div class="button">
     <a href="https://gopro.github.io/labs/control/precisiontime/" target="_blank">
@@ -167,7 +167,7 @@
     <div id="qrcodeBackupTime"></div>
   </div>
 
-  <div id="stimListSection" style="margin-top: 30px;">
+<!--   <div id="stimListSection" style="margin-top: 30px;">
     <h3>Stim List</h3>
     <table id="stimTable" border="1" style="width: 100%; border-collapse: collapse;">
       <thead>
@@ -179,7 +179,7 @@
     </table>
     <button onclick="addStimRow()">➕</button>
     <button id="nextStimBtn" style="display:none;">↓</button>
-  </div>
+  </div> -->
 
   <div id="debugInfo" style="white-space: pre-wrap;"></div>
 
@@ -372,8 +372,8 @@ function showTab(tabId) {
 
 document.getElementById("labelSelect").addEventListener("change", function () {
   const val = this.value;
-  document.getElementById("otherLabel").disabled = !(val === "Other" || val === "Task");
-  document.getElementById("nextStimBtn").style.display = val === "Stim" ? "inline-block" : "none";
+  document.getElementById("otherLabel").disabled = !(val === "Other" || val === "Task" || val == "Stim");
+  document.getElementById("nextStimBtn").style.display = "none";
 
   if (["Other", "Task"].includes(val)) return; // skip auto-update for these
 
@@ -392,7 +392,7 @@ document.getElementById("generateBtn").addEventListener("click", () => {
   const label = document.getElementById("labelSelect").value;
   const custom = document.getElementById("otherLabel").value.trim();
   if (label === "Stim") {
-    useStim(stimIndex);
+    noteText = `Task ${custom}`;
   } else if (label === "Task") {
     noteText = `Task ${custom}`;
   } else if (label === "Other") {
@@ -417,30 +417,30 @@ function highlightStimRow(index) {
   });
 }
 
-document.getElementById("stimUpload").addEventListener("change", function () {
-  const file = this.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function (e) {
-    const lines = e.target.result.split(/[\r\n]+/).filter(line => line.trim() !== "");
-    const headers = lines[0].trim().replace(/\uFEFF/, '').split(",");  // remove BOM
+// document.getElementById("stimUpload").addEventListener("change", function () {
+//   const file = this.files[0];
+//   if (!file) return;
+//   const reader = new FileReader();
+//   reader.onload = function (e) {
+//     const lines = e.target.result.split(/[\r\n]+/).filter(line => line.trim() !== "");
+//     const headers = lines[0].trim().replace(/\uFEFF/, '').split(",");  // remove BOM
 
-    if (headers.length !== 1 || headers.join(',') !== "session") {
-      alert("Invalid header. Make sure the CSV header is: session");
-      return;
-    }
+//     if (headers.length !== 1 || headers.join(',') !== "session") {
+//       alert("Invalid header. Make sure the CSV header is: session");
+//       return;
+//     }
 
-    stimList = lines.slice(1).map(line => {
-      const [session] = line.split(",").map(s => s.trim());
-      return {session};
-    });
+//     stimList = lines.slice(1).map(line => {
+//       const [session] = line.split(",").map(s => s.trim());
+//       return {session};
+//     });
 
-    stimIndex = 0;
-    renderStimTable();
-    alert("Stim list loaded!");
-  };
-  reader.readAsText(file);
-});
+//     stimIndex = 0;
+//     renderStimTable();
+//     alert("Stim list loaded!");
+//   };
+//   reader.readAsText(file);
+// });
 
 function renderStimTable() {
   const tbody = document.querySelector("#stimTable tbody");
